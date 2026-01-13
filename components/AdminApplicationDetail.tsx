@@ -28,13 +28,29 @@ export default function AdminApplicationDetail({ application, files, references 
     return data.signedUrl;
   }
 
+  // ✅ FIXED: Creates a temporary link and clicks it (bypasses popup blockers)
   async function openFile(fileType: string) {
     setMsg(null);
     try {
       const f = fileMap[fileType];
-      if (!f) return;
+      if (!f) {
+        setMsg(`No ${fileType} file found.`);
+        return;
+      }
+      
       const url = await signedUrl(f.storage_path);
-      window.open(url, "_blank", "noopener,noreferrer");
+      
+      // Create temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Trigger click
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
     } catch (e: any) {
       setMsg(e?.message || "Could not open file");
     }
